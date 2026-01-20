@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HealthCare Now - API Gateway</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .status {
+            color: #28a745;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .endpoints {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .endpoints h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .endpoint {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: white;
+            border-left: 4px solid #667eea;
+        }
+        
+        .endpoint-path {
+            color: #667eea;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        
+        .endpoint-desc {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .dashboard-link {
+            margin-top: 20px;
+        }
+        
+        .dashboard-link a {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        .dashboard-link a:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 HealthCare Now System</h1>
+        <div class="status">✓ API Gateway is Running</div>
+        
+        <div class="endpoints">
+            <h3>Available API Endpoints:</h3>
+            
+            <div class="endpoint">
+                <div class="endpoint-path">GET/POST /api/v1/auth</div>
+                <div class="endpoint-desc">Authentication Service - Xác thực người dùng</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-path">GET/POST /api/v1/user</div>
+                <div class="endpoint-desc">User Management - Quản lý người dùng</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-path">GET/POST /api/v1/patient</div>
+                <div class="endpoint-desc">Patient Management - Quản lý bệnh nhân</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-path">GET/POST /api/v1/tracking</div>
+                <div class="endpoint-desc">IoT Tracking - Theo dõi dữ liệu IoT</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-path">GET/POST /api/v1/device</div>
+                <div class="endpoint-desc">Device Management - Quản lý thiết bị</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-path">GET/POST /api/v1/analysis</div>
+                <div class="endpoint-desc">AI Analysis - Phân tích bằng AI</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="endpoint-path">GET /health</div>
+                <div class="endpoint-desc">Health Check - Kiểm tra trạng thái</div>
+            </div>
+        </div>
+        
+        <div class="dashboard-link">
+            <a href="http://localhost:3000/grafana" target="_blank">📊 Grafana Dashboard</a>
+            <a href="http://localhost:9090" target="_blank">📈 Prometheus Metrics</a>
+        </div>
+    </div>
+</body>
+</html>

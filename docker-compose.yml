@@ -1,0 +1,286 @@
+version: '3.8'
+
+services:
+  # ===== DATABASES (4 Logical DBs) =====
+  
+  # Core Database - Quản lý người dùng, bệnh nhân, hồ sơ
+  core_db:
+    image: mongo:latest
+    container_name: core_db
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: healthcare_core
+    volumes:
+      - core_data:/data/db
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # IoT Database - Dữ liệu từ các cảm biến, thiết bị
+  iot_db:
+    image: mongo:latest
+    container_name: iot_db
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: healthcare_iot
+    volumes:
+      - iot_data:/data/db
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # AI Database - Kết quả phân tích từ AI Service
+  ai_db:
+    image: mongo:latest
+    container_name: ai_db
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_DATABASE: healthcare_ai
+    volumes:
+      - ai_data:/data/db
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Notification Database - Lưu trạng thái gửi thông báo
+  notification_db:
+    image: mongo:latest
+    container_name: notification_db
+    ports:
+      - "27020:27017"
+    environment:
+      MONGO_INITDB_DATABASE: healthcare_notification
+    volumes:
+      - notification_data:/data/db
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== MESSAGE BROKER =====
+  
+  # RabbitMQ - Giao tiếp giữa các service
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"      # AMQP protocol
+      - "15672:15672"    # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ===== CACHE LAYER =====
+  
+  # Redis - Cache và session storage
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - healthcare-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # ===== API GATEWAY =====
+  
+  # Nginx - Điểm vào duy nhất, routing các request
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/html:/usr/share/nginx/html
+    depends_on:
+      - core_db
+      - iot_db
+      - ai_db
+      - notification_db
+      - rabbitmq
+      - redis
+      - prometheus
+      - grafana
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ===== MONITORING SYSTEM =====
+  
+  # Prometheus - Thu thập metrics từ các service
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana - Visualization của metrics
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_SERVER_ROOT_URL=http://localhost:3000/grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ===== MICROSERVICES (Placeholders) =====
+  # Những services này sẽ được thêm sau khi code xong
+  
+  # core-service:
+  #   image: danh/core-service:latest
+  #   container_name: core-service
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     SPRING_DATA_MONGODB_URI: mongodb://core_db:27017/healthcare_core
+  #     SPRING_RABBITMQ_HOST: rabbitmq
+  #     SPRING_REDIS_HOST: redis
+  #   depends_on:
+  #     - core_db
+  #     - rabbitmq
+  #     - redis
+  #   networks:
+  #     - healthcare-network
+
+  # iot-service:
+  #   image: danh/iot-service:latest
+  #   container_name: iot-service
+  #   ports:
+  #     - "8082:8082"
+  #   environment:
+  #     SPRING_DATA_MONGODB_URI: mongodb://iot_db:27017/healthcare_iot
+  #     SPRING_RABBITMQ_HOST: rabbitmq
+  #     SPRING_REDIS_HOST: redis
+  #   depends_on:
+  #     - iot_db
+  #     - rabbitmq
+  #     - redis
+  #   networks:
+  #     - healthcare-network
+
+  # ai-service:
+  #   image: danh/ai-service:latest
+  #   container_name: ai-service
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     MONGODB_URI: mongodb://ai_db:27017/healthcare_ai
+  #     RABBITMQ_HOST: rabbitmq
+  #     REDIS_HOST: redis
+  #   depends_on:
+  #     - ai_db
+  #     - rabbitmq
+  #     - redis
+  #   networks:
+  #     - healthcare-network
+
+  # notification-service:
+  #   image: danh/notification-service:latest
+  #   container_name: notification-service
+  #   ports:
+  #     - "8084:8084"
+  #   environment:
+  #     SPRING_DATA_MONGODB_URI: mongodb://notification_db:27017/healthcare_notification
+  #     SPRING_RABBITMQ_HOST: rabbitmq
+  #     SPRING_REDIS_HOST: redis
+  #   depends_on:
+  #     - notification_db
+  #     - rabbitmq
+  #     - redis
+  #   networks:
+  #     - healthcare-network
+
+# ===== NETWORKS =====
+networks:
+  healthcare-network:
+    driver: bridge
+
+# ===== VOLUMES =====
+volumes:
+  core_data:
+    driver: local
+  iot_data:
+    driver: local
+  ai_data:
+    driver: local
+  notification_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
