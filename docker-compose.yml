@@ -1,11 +1,11 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # ===== DATABASES (4 Logical DBs) =====
-  
+
   # Core Database - Quản lý người dùng, bệnh nhân, hồ sơ
   core_db:
-    image: mongo:latest
+    image: mongo:7.0
     container_name: core_db
     ports:
       - "27017:27017"
@@ -16,14 +16,14 @@ services:
     networks:
       - healthcare-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   # IoT Database - Dữ liệu từ các cảm biến, thiết bị
   iot_db:
-    image: mongo:latest
+    image: mongo:7.0
     container_name: iot_db
     ports:
       - "27018:27017"
@@ -34,14 +34,14 @@ services:
     networks:
       - healthcare-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   # AI Database - Kết quả phân tích từ AI Service
   ai_db:
-    image: mongo:latest
+    image: mongo:7.0
     container_name: ai_db
     ports:
       - "27019:27017"
@@ -52,14 +52,14 @@ services:
     networks:
       - healthcare-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   # Notification Database - Lưu trạng thái gửi thông báo
   notification_db:
-    image: mongo:latest
+    image: mongo:7.0
     container_name: notification_db
     ports:
       - "27020:27017"
@@ -70,20 +70,69 @@ services:
     networks:
       - healthcare-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ===== POSTGRESQL DATABASE (Structured Data) =====
+
+  # Main PostgreSQL - Users, Roles, Finance, Catalog
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-healthcare} # Main DB
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PgAdmin - Quản lý DB PostgreSQL qua UI
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@healthcare.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    depends_on:
+      - postgres
+    networks:
+      - healthcare-network
+
+  # Postgres Exporter - Monitor PostgreSQL cho Prometheus
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
+    ports:
+      - "9187:9187"
+    environment:
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/postgres?sslmode=disable"
+    depends_on:
+      - postgres
+    networks:
+      - healthcare-network
+
   # ===== MESSAGE BROKER =====
-  
+
   # RabbitMQ - Giao tiếp giữa các service
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq
     ports:
-      - "5672:5672"      # AMQP protocol
-      - "15672:15672"    # Management UI
+      - "5672:5672" # AMQP protocol
+      - "15672:15672" # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -98,7 +147,7 @@ services:
       retries: 5
 
   # ===== CACHE LAYER =====
-  
+
   # Redis - Cache và session storage
   redis:
     image: redis:7-alpine
@@ -117,7 +166,7 @@ services:
       retries: 3
 
   # ===== API GATEWAY =====
-  
+
   # Nginx - Điểm vào duy nhất, routing các request
   nginx:
     build:
@@ -142,13 +191,21 @@ services:
     networks:
       - healthcare-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost/health",
+        ]
       interval: 10s
       timeout: 5s
       retries: 3
 
   # ===== MONITORING SYSTEM =====
-  
+
   # Prometheus - Thu thập metrics từ các service
   prometheus:
     image: prom/prometheus:latest
@@ -159,13 +216,21 @@ services:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
     networks:
       - healthcare-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:9090/-/healthy",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -189,14 +254,22 @@ services:
     networks:
       - healthcare-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
 
   # ===== MICROSERVICES (Placeholders) =====
   # Những services này sẽ được thêm sau khi code xong
-  
+
   # core-service:
   #   image: danh/core-service:latest
   #   container_name: core-service
@@ -283,4 +356,6 @@ volumes:
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  postgres_data:
     driver: local

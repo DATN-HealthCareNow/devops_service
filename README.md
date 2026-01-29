@@ -6,7 +6,7 @@ Repository này chứa toàn bộ cấu hình DevOps và infrastructure cho hệ
 
 - **Orchestration**: Docker Compose để điều phối 4 microservices + 4 databases + message broker
 - **API Gateway**: Nginx làm cổng vào duy nhất (port 80/443)
-- **Database Management**: 4 MongoDB instances cho 4 logical databases
+- **Database Management**: Hybrid Architecture (MongoDB for Unstructured Data + PostgreSQL for Structured Data)
 - **Monitoring**: Prometheus + Grafana để theo dõi performance
 - **Cache & Messaging**: Redis + RabbitMQ
 
@@ -63,27 +63,35 @@ Repository này chứa toàn bộ cấu hình DevOps và infrastructure cho hệ
 ## 📦 Services & Components
 
 ### Databases (4 Logical DBs)
-| Database | Container Name | Port | Purpose |
-|----------|---|---|---|
-| **Core DB** | core_db | 27017 | Người dùng, bệnh nhân, hồ sơ |
-| **IoT DB** | iot_db | 27018 | Dữ liệu cảm biến, thiết bị |
-| **AI DB** | ai_db | 27019 | Kết quả phân tích từ AI |
-| **Notification DB** | notification_db | 27020 | Lưu log/template thông báo |
+
+| Database            | Container Name  | Port  | Purpose                                     |
+| ------------------- | --------------- | ----- | ------------------------------------------- |
+| **Core DB**         | core_db         | 27017 | Người dùng, bệnh nhân, hồ sơ                |
+| **IoT DB**          | iot_db          | 27018 | Dữ liệu cảm biến, thiết bị                  |
+| **AI DB**           | ai_db           | 27019 | Kết quả phân tích từ AI                     |
+| **Notification DB** | notification_db | 27020 | Lưu log/template thông báo                  |
+| **PostgreSQL**      | postgres        | 5432  | Users, Roles, Finance, Catalog (Structured) |
+
+75
 
 ### Infrastructure Services
-| Service | Port | Purpose |
-|---------|------|---------|
-| **Nginx** | 80, 443 | API Gateway |
-| **RabbitMQ** | 5672, 15672 | Message Broker |
-| **Redis** | 6379 | Cache & Session Storage |
-| **Prometheus** | 9090 | Metrics Collection |
-| **Grafana** | 3000 | Visualization Dashboard |
+
+| Service               | Port        | Purpose                 |
+| --------------------- | ----------- | ----------------------- |
+| **Nginx**             | 80, 443     | API Gateway             |
+| **PgAdmin**           | 5050        | Web UI for PostgreSQL   |
+| **Postgres Exporter** | 9187        | Metrics for Prometheus  |
+| **RabbitMQ**          | 5672, 15672 | Message Broker          |
+| **Redis**             | 6379        | Cache & Session Storage |
+| **Prometheus**        | 9090        | Metrics Collection      |
+| **Grafana**           | 3000        | Visualization Dashboard |
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 ```bash
 # Kiểm tra Docker & Docker Compose
 docker --version
@@ -91,12 +99,14 @@ docker-compose --version
 ```
 
 ### 1. Clone Repository
+
 ```bash
 git clone https://github.com/your-org/devops-service.git
 cd devops-service
 ```
 
 ### 2. Cấu hình Environment
+
 ```bash
 # Copy file mẫu
 cp .env.example .env
@@ -106,6 +116,7 @@ vi .env
 ```
 
 ### 3. Khởi động hệ thống
+
 ```bash
 # Cách 1: Dùng script (Recommended)
 chmod +x scripts/start-all.sh
@@ -116,6 +127,7 @@ docker-compose up -d
 ```
 
 ### 4. Kiểm tra trạng thái
+
 ```bash
 ./scripts/health-check.sh
 # hoặc
@@ -123,6 +135,7 @@ docker-compose ps
 ```
 
 ### 5. Khởi tạo Database (nếu lần đầu)
+
 ```bash
 chmod +x scripts/init-databases.sh
 ./scripts/init-databases.sh
@@ -130,16 +143,46 @@ chmod +x scripts/init-databases.sh
 
 ---
 
+## 🐘 PostgreSQL Management
+
+### Accessing PgAdmin
+
+1. Truy cập: [http://localhost:5050](http://localhost:5050)
+2. Login: Email/Password defined in `.env` (Default: `admin@healthcare.com` / `admin`)
+3. **Connect to Server**:
+   - Host: `postgres`
+   - Username: `postgres` (or as defined in .env)
+   - Password: `postgres` (or as defined in .env)
+
+### Backup & Restore
+
+Backup toàn bộ data PostgreSQL:
+
+```bash
+./scripts/backup-databases.sh
+```
+
+Restore data (cần copy file dump vào container hoặc mount volume):
+
+```bash
+# PostgreSQL
+cat backup_file.sql | docker exec -i postgres psql -U postgres -d healthcare_auth
+```
+
+> **Note on Migration**: Việc chuyển đổi dữ liệu từ MongoDB sang PostgreSQL (nếu có) đòi hỏi quy trình ETL (Extract-Transform-Load) riêng biệt và không được bao gồm trong các script backup/restore này.
+
+---
+
 ## 📊 Accessing Services
 
-| Service | URL | Credentials |
-|---------|-----|---|
-| **API Gateway** | http://localhost | N/A |
-| **Grafana** | http://localhost:3000/grafana | admin / admin |
-| **Prometheus** | http://localhost:9090 | N/A |
-| **RabbitMQ Management** | http://localhost:15672 | guest / guest |
-| **MongoDB** | mongodb://localhost:27017 | (depends on setup) |
-| **Redis CLI** | redis://localhost:6379 | N/A |
+| Service                 | URL                           | Credentials        |
+| ----------------------- | ----------------------------- | ------------------ |
+| **API Gateway**         | http://localhost              | N/A                |
+| **Grafana**             | http://localhost:3000/grafana | admin / admin      |
+| **Prometheus**          | http://localhost:9090         | N/A                |
+| **RabbitMQ Management** | http://localhost:15672        | guest / guest      |
+| **MongoDB**             | mongodb://localhost:27017     | (depends on setup) |
+| **Redis CLI**           | redis://localhost:6379        | N/A                |
 
 ---
 
@@ -200,19 +243,25 @@ docker-compose pull            # Pull latest images
 ### 5. **Monitoring dengan Grafana**
 
 #### Cách truy cập
+
 1. Mở browser: http://localhost:3000/grafana
 2. Login: admin / admin
 3. Datasource tự động là Prometheus
 
 #### Pre-built Dashboards (Có sẵn!)
+
 ✅ **3 Dashboard đã được tạo sẵn:**
+
 - **healthcare-metrics.json** - CPU, Memory, Request Rate, Response Time
 - **service-status.json** - Real-time status của tất cả services
 - **jvm-performance.json** - JVM metrics (memory, threads, GC, requests)
 
 Các dashboard sẽ tự động load khi Grafana khởi động!
 
+> 💡 **Tip:** Để monitor PostgreSQL chuyên sâu, bạn có thể Import thêm dashboard ID **9628** (PostgreSQL Database) từ thư viện Grafana.
+
 #### Cách xem Metrics
+
 Prometheus tự động collect metrics từ các service thông qua endpoint `/actuator/prometheus`. Bạn cần:
 
 1. Thêm Spring Boot Actuator vào các Java service
@@ -220,10 +269,13 @@ Prometheus tự động collect metrics từ các service thông qua endpoint `/
 3. Đảm bảo service URL trong prometheus.yml là đúng
 
 #### Tạo Dashboard Custom
+
 Xem hướng dẫn tại: https://grafana.com/docs/grafana/latest/getting-started/build-first-dashboard/
 
 #### 🎯 Demo Strategy (Cực quan trọng!)
+
 Khi phòng vấ đề xuất:
+
 1. Chạy các hành động liên tục (import data, search, analysis)
 2. Mở Grafana dashboard
 3. Show biểu đồ CPU/RAM tăng lên theo thời gian thực
@@ -235,6 +287,7 @@ Khi phòng vấ đề xuất:
 ## 🐛 Troubleshooting
 
 ### Service không khởi động?
+
 ```bash
 # Xem chi tiết lỗi
 docker-compose logs <service_name>
@@ -245,6 +298,7 @@ lsof -i :<port>                 # macOS/Linux
 ```
 
 ### Database connection failed?
+
 ```bash
 # Đảm bảo network name đúng
 docker network ls
@@ -255,6 +309,7 @@ docker-compose exec core_db mongosh
 ```
 
 ### Grafana không hiển thị metrics?
+
 1. Kiểm tra Prometheus UI: http://localhost:9090
 2. Vào Status → Targets để xem service status
 3. Đảm bảo service có `/actuator/prometheus` endpoint
@@ -299,6 +354,7 @@ devops-service/
 ## 🔐 Security Notes
 
 ### For Production
+
 1. Thay đổi GRAFANA_ADMIN_PASSWORD
 2. Thay đổi RABBITMQ_DEFAULT_USER/PASSWORD
 3. Cấu hình SSL/TLS cho Nginx
