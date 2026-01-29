@@ -13,12 +13,14 @@ Status hiện tại:
 ## 🔐 Tại sao cần phân biệt .env và .env.example?
 
 ### .env.example (Shared - Commit to Git)
+
 - Chứa template/mẫu
 - Không chứa mật khẩu thực
 - Dùng để guide cộng tác viên
 - Được commit vào Git
 
 ### .env (Secret - NOT Shared)
+
 - Chứa giá trị thực tế
 - **KHÔNG** commit vào Git
 - **TRONG .gitignore**
@@ -29,11 +31,13 @@ Status hiện tại:
 ## ⚙️ Cách Setup .env
 
 ### Bước 1: Tạo file .env từ template
+
 ```bash
 cp .env.example .env
 ```
 
 ### Bước 2: Mở file .env và điền giá trị thực
+
 ```bash
 vi .env
 # hoặc dùng editor yêu thích
@@ -74,6 +78,7 @@ RABBITMQ_PASSWORD=guest                   # ⚠️ THAY ĐỔI cho production
 ## 🔒 Bảo mật .env
 
 ### ✅ DO (Nên làm)
+
 ```bash
 # Verify .env in .gitignore
 cat .gitignore | grep ".env"
@@ -86,6 +91,7 @@ chmod 600 .env
 ```
 
 ### ❌ DON'T (Không nên làm)
+
 ```bash
 # ❌ KHÔNG commit .env vào Git
 git add .env
@@ -101,6 +107,7 @@ git commit -m "add env"
 ## 📝 Giải thích từng biến
 
 ### Database Configuration
+
 ```env
 MONGO_CORE_DB=healthcare_core
 # Database name cho Core Service
@@ -112,7 +119,21 @@ MONGO_CORE_PORT=27017
 # Có thể thay đổi nếu port bị chiếm (e.g., 27017 → 27117)
 ```
 
+### PostgreSQL Configuration (NEW)
+
+```env
+POSTGRES_USER=postgres
+# Superuser for PostgreSQL
+
+POSTGRES_DB_AUTH=healthcare_auth
+# Database for Users, Roles, Subscriptions
+
+POSTGRES_DB_CATALOG=healthcare_catalog
+# Database for Medications, Foods
+```
+
 ### Redis Configuration
+
 ```env
 REDIS_HOST=redis
 # Hostname của Redis container
@@ -125,6 +146,7 @@ REDIS_PORT=6379
 ```
 
 ### RabbitMQ Configuration
+
 ```env
 RABBITMQ_HOST=rabbitmq
 # Hostname của RabbitMQ container
@@ -143,6 +165,7 @@ RABBITMQ_PASSWORD=guest
 ```
 
 ### Service Ports
+
 ```env
 CORE_SERVICE_PORT=8081
 # Port của Core Service
@@ -157,12 +180,13 @@ AI_SERVICE_PORT=8000
 ```
 
 ### Grafana Configuration
+
 ```env
 GRAFANA_ADMIN_PASSWORD=admin
 # Mật khẩu admin của Grafana
 # Default: admin
 # ⚠️ ĐỔI THÀNH CHẮC CHẮn CHO PRODUCTION
-# Quy tắc: 
+# Quy tắc:
 #   - Tối thiểu 8 ký tự
 #   - Có chữ hoa, chữ thường, số, ký tự đặc biệt
 # Ví dụ: GrafanaProd@2024!
@@ -174,6 +198,7 @@ GRAFANA_PORT=3000
 ```
 
 ### Prometheus Configuration
+
 ```env
 PROMETHEUS_PORT=9090
 # Port của Prometheus
@@ -182,6 +207,7 @@ PROMETHEUS_PORT=9090
 ```
 
 ### Java Options
+
 ```env
 JAVA_OPTS=-Xmx512m -Xms256m
 # JVM memory settings cho Java services
@@ -206,6 +232,13 @@ MONGO_CORE_PORT=27017
 MONGO_IOT_PORT=27018
 MONGO_AI_PORT=27019
 MONGO_NOTIFICATION_PORT=27020
+
+# ===== POSTGRESQL CONFIGURATION =====
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB_AUTH=healthcare_auth
+POSTGRES_DB_CATALOG=healthcare_catalog
 
 # ===== REDIS CONFIGURATION =====
 REDIS_HOST=redis
@@ -254,6 +287,18 @@ MONGO_CORE_PORT=27017
 MONGO_IOT_PORT=27018
 MONGO_ANALYSIS_PORT=27019
 MONGO_TRACKING_PORT=27020
+
+# ===== POSTGRESQL CONFIGURATION =====
+POSTGRES_USER=healthcare_admin
+POSTGRES_PASSWORD=SecurePostgresPass2024!
+POSTGRES_PORT=5432
+POSTGRES_DB_AUTH=healthcare_auth
+POSTGRES_DB_CATALOG=healthcare_catalog
+
+# ===== PGADMIN CONFIGURATION =====
+PGADMIN_DEFAULT_EMAIL=admin@healthcare.com
+PGADMIN_DEFAULT_PASSWORD=StrongPgAdminPass2024!
+PGADMIN_PORT=5050
 
 # ===== REDIS CONFIGURATION =====
 REDIS_HOST=redis
@@ -318,12 +363,14 @@ docker-compose config | grep GRAFANA_ADMIN_PASSWORD
 ## ❌ Lỗi Thường Gặp
 
 ### ❌ Error: ".env file not found"
+
 ```bash
 # Solution:
 cp .env.example .env
 ```
 
 ### ❌ Error: "Grafana access denied"
+
 ```bash
 # Kiểm tra mật khẩu trong .env
 cat .env | grep GRAFANA_ADMIN_PASSWORD
@@ -333,6 +380,7 @@ docker-compose restart grafana
 ```
 
 ### ❌ Error: "RabbitMQ authentication failed"
+
 ```bash
 # Kiểm tra credentials
 cat .env | grep RABBITMQ
@@ -342,6 +390,7 @@ docker-compose logs rabbitmq
 ```
 
 ### ❌ Error: "Port already in use"
+
 ```bash
 # Solution: Thay đổi port trong .env
 # Ví dụ: NGINX_HTTP_PORT=80 → NGINX_HTTP_PORT=8080
@@ -357,11 +406,26 @@ netstat -ano | findstr :80  # Windows
 
 - [ ] Có file .env (từ `cp .env.example .env`)
 - [ ] Chỉnh sửa GRAFANA_ADMIN_PASSWORD thành mật khẩu mạnh
+- [ ] Chỉnh sửa POSTGRES_PASSWORD & PGADMIN_DEFAULT_PASSWORD (Rất quan trọng cho Data Security)
 - [ ] Chỉnh sửa RABBITMQ_USER & PASSWORD cho production
 - [ ] .env trong .gitignore
 - [ ] .env KHÔNG commit vào git
 - [ ] Verify với `docker-compose config`
 - [ ] Test login Grafana http://localhost:3000/grafana
+
+---
+
+## 🔐 Security Notes
+
+### For Production
+
+1. Thay đổi GRAFANA_ADMIN_PASSWORD
+2. Thay đổi RABBITMQ_DEFAULT_USER/PASSWORD
+3. **Cấu hình SSL/TLS cho Nginx**
+4. **Bật SSL/TLS cho PostgreSQL connections**
+5. Bật authentication cho Prometheus & Grafana
+6. Giới hạn database access từ authorized IPs
+7. Sử dụng secrets management (Docker Secrets, Vault, etc.)
 
 ---
 
@@ -374,6 +438,7 @@ netstat -ano | findstr :80  # Windows
 ---
 
 **Key Takeaway:**
+
 - `.env.example` là template, commit vào Git
 - `.env` là secret, KHÔNG commit vào Git
 - Mỗi team member có .env khác nhau

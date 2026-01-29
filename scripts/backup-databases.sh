@@ -47,6 +47,20 @@ backup_database "iot_db" "healthcare_iot"
 backup_database "ai_db" "healthcare_ai"
 backup_database "notification_db" "healthcare_notification"
 
+# Backup PostgreSQL
+echo "🐘 Backing up PostgreSQL..."
+PG_CONTAINER="postgres"
+PG_BACKUP_FILE="${BACKUP_PATH}/postgres_dump.sql"
+
+if docker ps | grep -q $PG_CONTAINER; then
+    docker exec -t $PG_CONTAINER pg_dumpall -c -U postgres > "$PG_BACKUP_FILE" 2>/dev/null || {
+         echo "⚠️  Warning: Could not backup PostgreSQL"
+    }
+    echo "✓ Backup PostgreSQL completed"
+else
+    echo "⚠️  Warning: PostgreSQL container not running"
+fi
+
 echo ""
 echo "=================================================="
 echo "✅ Backup completed!"
@@ -57,5 +71,6 @@ du -sh "${BACKUP_PATH}"/*
 
 echo ""
 echo "💡 To restore:"
-echo "  mongorestore --archive=<backup_file> --db <database_name>"
+echo "  Mongo:    mongorestore --archive=<backup_file> --db <database_name>"
+echo "  Postgres: cat <backup_file> | docker exec -i postgres psql -U postgres"
 echo ""

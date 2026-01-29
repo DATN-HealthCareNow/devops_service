@@ -47,6 +47,8 @@ check_container "iot_db"
 check_container "redis"
 check_container "rabbitmq"
 check_container "nginx"
+check_container "postgres"
+check_container "pgadmin"
 check_container "prometheus"
 check_container "grafana"
 
@@ -55,6 +57,15 @@ echo "🌐 Service Health:"
 check_service "Nginx Gateway" "http://localhost/health" || true
 check_service "Prometheus" "http://localhost:9090/-/healthy" || true
 check_service "Grafana" "http://localhost:3000/api/health" || true
+
+echo ""
+echo "🐘 Database Connectivity:"
+echo -n "Checking PostgreSQL connection... "
+if docker exec postgres pg_isready -U postgres > /dev/null 2>&1; then
+    echo "✅ Ready"
+else
+    echo "❌ Not Ready"
+fi
 
 echo ""
 echo "📊 Docker Container Resources:"

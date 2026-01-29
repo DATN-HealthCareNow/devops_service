@@ -1,0 +1,202 @@
+version: '3.8'
+
+# =========================================================
+# 🏗️ DEVELOPMENT ENVIRONMENT (INFRASTRUCTURE ONLY)
+# ---------------------------------------------------------
+# Includes: Databases (Mongo, Postgres), Message Broker (RabbitMQ), Cache (Redis), API Gateway (Nginx)
+# Excludes: Heavy Monitoring Stack (Prometheus, Grafana) - Use docker-compose.monitoring.yml for that.
+# =========================================================
+
+services:
+  # ===== DATABASES (4 Logical DBs) =====
+  core_db:
+    image: mongo:7.0
+    container_name: core_db
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: healthcare_core
+    volumes:
+      - core_data:/data/db
+    networks:
+      - healthcare-network
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  iot_db:
+    image: mongo:7.0
+    container_name: iot_db
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: healthcare_iot
+    volumes:
+      - iot_data:/data/db
+    networks:
+      - healthcare-network
+    ports:
+      - "27018:27017"
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ai_db:
+    image: mongo:7.0
+    container_name: ai_db
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: healthcare_ai
+    volumes:
+      - ai_data:/data/db
+    networks:
+      - healthcare-network
+    ports:
+      - "27019:27017"
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  notification_db:
+    image: mongo:7.0
+    container_name: notification_db
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: healthcare_notification
+    volumes:
+      - notification_data:/data/db
+    networks:
+      - healthcare-network
+    ports:
+      - "27020:27017"
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== POSTGRESQL DATABASE =====
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-healthcare}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@healthcare.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - healthcare-network
+    depends_on:
+      postgres:
+        condition: service_started
+
+  # ===== CACHE & MESSAGING =====
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - healthcare-network
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ===== API GATEWAY =====
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    restart: always
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/html:/usr/share/nginx/html
+    networks:
+      - healthcare-network
+    depends_on:
+      core_db:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+# ===== NETWORKS & VOLUMES =====
+networks:
+  healthcare-network:
+    driver: bridge
+
+volumes:
+  core_data:
+    driver: local
+  iot_data:
+    driver: local
+  ai_data:
+    driver: local
+  notification_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local

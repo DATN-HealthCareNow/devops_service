@@ -1,11 +1,11 @@
 # Prometheus Configuration File
 # ===== GLOBAL SETTINGS =====
 global:
-  scrape_interval: 15s          # Thu thập dữ liệu mỗi 15 giây
-  evaluation_interval: 15s      # Đánh giá rules mỗi 15 giây
+  scrape_interval: 15s # Thu thập dữ liệu mỗi 15 giây
+  evaluation_interval: 15s # Đánh giá rules mỗi 15 giây
   external_labels:
-    cluster: 'healthcare-now'
-    environment: 'development'
+    cluster: "healthcare-now"
+    environment: "development"
 
 # ===== ALERTMANAGER CONFIGURATION =====
 # (Uncomment khi cần cảnh báo)
@@ -18,59 +18,59 @@ global:
 # ===== SCRAPE CONFIGURATIONS =====
 scrape_configs:
   # ===== PROMETHEUS ITSELF =====
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
     scrape_interval: 5s
     scrape_timeout: 5s
 
   # ===== CORE SERVICE =====
-  - job_name: 'core-service'
-    metrics_path: '/actuator/prometheus'
+  - job_name: "core-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ['core-service:8081']
+      - targets: ["core-service:8081"]
     scrape_interval: 15s
     scrape_timeout: 10s
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
-        replacement: 'core-service'
+        replacement: "core-service"
 
   # ===== IOT SERVICE =====
-  - job_name: 'iot-service'
-    metrics_path: '/actuator/prometheus'
+  - job_name: "iot-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ['iot-service:8082']
+      - targets: ["iot-service:8082"]
     scrape_interval: 15s
     scrape_timeout: 10s
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
-        replacement: 'iot-service'
+        replacement: "iot-service"
 
   # ===== AI SERVICE (FastAPI) =====
-  - job_name: 'ai-service'
-    metrics_path: '/metrics'
+  - job_name: "ai-service"
+    metrics_path: "/metrics"
     static_configs:
-      - targets: ['ai-service:8000']
+      - targets: ["ai-service:8000"]
     scrape_interval: 15s
     scrape_timeout: 10s
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
-        replacement: 'ai-service'
+        replacement: "ai-service"
 
   # ===== NOTIFICATION SERVICE =====
-  - job_name: 'notification-service'
-    metrics_path: '/actuator/prometheus'
+  - job_name: "notification-service"
+    metrics_path: "/actuator/prometheus"
     static_configs:
-      - targets: ['notification-service:8084']
+      - targets: ["notification-service:8084"]
     scrape_interval: 15s
     scrape_timeout: 10s
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
-        replacement: 'notification-service'
+        replacement: "notification-service"
 
   # ===== DOCKER DAEMON METRICS =====
   # (Nếu sử dụng cAdvisor để monitor Docker)
@@ -99,6 +99,12 @@ scrape_configs:
   #   static_configs:
   #     - targets: ['redis-exporter:9121']
   #   scrape_interval: 30s
+
+  # ===== POSTGRESQL METRICS =====
+  - job_name: "postgresql"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+    scrape_interval: 15s
 
 # ===== RECORDING RULES (tùy chọn) =====
 # rule_files:
