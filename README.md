@@ -64,27 +64,25 @@ Repository này chứa toàn bộ cấu hình DevOps và infrastructure cho hệ
 
 ### Databases (4 Logical DBs)
 
-| Database            | Container Name  | Port  | Purpose                                     |
-| ------------------- | --------------- | ----- | ------------------------------------------- |
-| **Core DB**         | core_db         | 27017 | Người dùng, bệnh nhân, hồ sơ                |
-| **IoT DB**          | iot_db          | 27018 | Dữ liệu cảm biến, thiết bị                  |
-| **AI DB**           | ai_db           | 27019 | Kết quả phân tích từ AI                     |
-| **Notification DB** | notification_db | 27020 | Lưu log/template thông báo                  |
-| **PostgreSQL**      | postgres        | 5432  | Users, Roles, Finance, Catalog (Structured) |
+| Database            | Container Name  | Port  | Purpose                      |
+| ------------------- | --------------- | ----- | ---------------------------- |
+| **Core DB**         | core_db         | 27017 | Người dùng, bệnh nhân, hồ sơ |
+| **IoT DB**          | iot_db          | 27018 | Dữ liệu cảm biến, thiết bị   |
+| **AI DB**           | ai_db           | 27019 | Kết quả phân tích từ AI      |
+| **Notification DB** | notification_db | 27020 | Lưu log/template thông báo   |
 
 75
 
 ### Infrastructure Services
 
-| Service               | Port        | Purpose                 |
-| --------------------- | ----------- | ----------------------- |
-| **Nginx**             | 80, 443     | API Gateway             |
-| **PgAdmin**           | 5050        | Web UI for PostgreSQL   |
-| **Postgres Exporter** | 9187        | Metrics for Prometheus  |
-| **RabbitMQ**          | 5672, 15672 | Message Broker          |
-| **Redis**             | 6379        | Cache & Session Storage |
-| **Prometheus**        | 9090        | Metrics Collection      |
-| **Grafana**           | 3000        | Visualization Dashboard |
+| Service   | Port    | Purpose     |
+| --------- | ------- | ----------- |
+| **Nginx** | 80, 443 | API Gateway |
+
+| **RabbitMQ** | 5672, 15672 | Message Broker |
+| **Redis** | 6379 | Cache & Session Storage |
+| **Prometheus** | 9090 | Metrics Collection |
+| **Grafana** | 3000 | Visualization Dashboard |
 
 ---
 
@@ -142,34 +140,6 @@ chmod +x scripts/init-databases.sh
 ```
 
 ---
-
-## 🐘 PostgreSQL Management
-
-### Accessing PgAdmin
-
-1. Truy cập: [http://localhost:5050](http://localhost:5050)
-2. Login: Email/Password defined in `.env` (Default: `admin@healthcare.com` / `admin`)
-3. **Connect to Server**:
-   - Host: `postgres`
-   - Username: `postgres` (or as defined in .env)
-   - Password: `postgres` (or as defined in .env)
-
-### Backup & Restore
-
-Backup toàn bộ data PostgreSQL:
-
-```bash
-./scripts/backup-databases.sh
-```
-
-Restore data (cần copy file dump vào container hoặc mount volume):
-
-```bash
-# PostgreSQL
-cat backup_file.sql | docker exec -i postgres psql -U postgres -d healthcare_auth
-```
-
-> **Note on Migration**: Việc chuyển đổi dữ liệu từ MongoDB sang PostgreSQL (nếu có) đòi hỏi quy trình ETL (Extract-Transform-Load) riêng biệt và không được bao gồm trong các script backup/restore này.
 
 ---
 
@@ -257,8 +227,6 @@ docker-compose pull            # Pull latest images
 - **jvm-performance.json** - JVM metrics (memory, threads, GC, requests)
 
 Các dashboard sẽ tự động load khi Grafana khởi động!
-
-> 💡 **Tip:** Để monitor PostgreSQL chuyên sâu, bạn có thể Import thêm dashboard ID **9628** (PostgreSQL Database) từ thư viện Grafana.
 
 #### Cách xem Metrics
 

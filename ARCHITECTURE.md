@@ -24,15 +24,11 @@ Hệ thống sử dụng mô hình Microservices với API Gateway đóng vai tr
 │ │ │ │
 ┌───────────┴────────────┴───────────┴───────────┴────────┐
 │ Shared Infrastructure (Docker) │
-│ ┌───────┐ ┌───────┐ ┌───────┐ ┌────────┐ ┌─────┐ ┌────┐ │
-│ │core_db│ │iot_db │ │ai_db │ │notif_db│ │Redis│ │PGS │ │
-│ │:27017 │ │:27018 │ │:27019 │ │:27020 │ │:6379│ │:5432 │ │
-│ └───────┘ └───────┘ └───────┘ └────────┘ └─────┘ └─┬──┘ │
-│ │ │
-│ ┌──▼──┐ │
-│ │PgAdm│ │
-│ │:5050│ │
-│ └─────┘ │
+│ ┌───────┐ ┌───────┐ ┌───────┐ ┌────────┐ ┌─────┐ │
+│ │core_db│ │iot_db │ │ai_db │ │notif_db│ │Redis│ │
+│ │:27017 │ │:27018 │ │:27019 │ │:27020 │ │:6379│ │
+│ └───────┘ └───────┘ └───────┘ └────────┘ └─────┘ │
+
 └─────────────────────────────────────────────────────────┘
 
 ## 2. Communication Strategy
@@ -50,10 +46,6 @@ Asynchronous (Bất đồng bộ): Các Service giao tiếp qua RabbitMQ cho cá
   - `core_db` (27017): Medical Records (Nested Documents)
   - `iot_db` (27018): Sensor Data (TimeSeries)
   - `ai_db` (27019): Analysis results
-- **PostgreSQL**: Relational & Strict Consistency
-  - `postgres` (5432):
-    - DB `healthcare_auth`: Users, Roles, Subscriptions
-    - DB `healthcare_catalog`: Medications, Foods (Many-to-Many)
 
 ## 4. Monitoring Stack
 

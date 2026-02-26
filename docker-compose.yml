@@ -75,55 +75,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # ===== POSTGRESQL DATABASE (Structured Data) =====
-
-  # Main PostgreSQL - Users, Roles, Finance, Catalog
-  postgres:
-    image: postgres:16-alpine
-    container_name: postgres
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-healthcare} # Main DB
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - healthcare-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # PgAdmin - Quản lý DB PostgreSQL qua UI
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgadmin
-    ports:
-      - "${PGADMIN_PORT:-5050}:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@healthcare.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-    depends_on:
-      - postgres
-    networks:
-      - healthcare-network
-
-  # Postgres Exporter - Monitor PostgreSQL cho Prometheus
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter
-    container_name: postgres-exporter
-    ports:
-      - "9187:9187"
-    environment:
-      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/postgres?sslmode=disable"
-    depends_on:
-      - postgres
-    networks:
-      - healthcare-network
-
   # ===== MESSAGE BROKER =====
 
   # RabbitMQ - Giao tiếp giữa các service
@@ -318,21 +269,25 @@ services:
   #   networks:
   #     - healthcare-network
 
-  # notification-service:
-  #   image: danh/notification-service:latest
-  #   container_name: notification-service
-  #   ports:
-  #     - "8084:8084"
-  #   environment:
-  #     SPRING_DATA_MONGODB_URI: mongodb://notification_db:27017/healthcare_notification
-  #     SPRING_RABBITMQ_HOST: rabbitmq
-  #     SPRING_REDIS_HOST: redis
-  #   depends_on:
-  #     - notification_db
-  #     - rabbitmq
-  #     - redis
-  #   networks:
-  #     - healthcare-network
+  notification-service:
+    image: danh/notification-service:latest
+    container_name: notification-service
+    ports:
+      - "8084:8084"
+    env_file:
+      - .env
+    environment:
+      SPRING_DATA_MONGODB_URI: ${MONGO_NOTIFICATION_URI:-mongodb://notification_db:27017/healthcare_notification}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_REDIS_HOST: redis
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+    depends_on:
+      - notification_db
+      - rabbitmq
+      - redis
+    networks:
+      - healthcare-network
 
 # ===== NETWORKS =====
 networks:
@@ -356,6 +311,4 @@ volumes:
   prometheus_data:
     driver: local
   grafana_data:
-    driver: local
-  postgres_data:
     driver: local
