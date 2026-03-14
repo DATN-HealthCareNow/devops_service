@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#===== RESTORE DATABASES SCRIPT =====
-# Script restore backup databases (MongoDB & PostgreSQL)
+#===== DATABASE RESTORE SCRIPT =====
+# Script restore backup databases (MongoDB)
 
 set -e
 

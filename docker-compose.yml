@@ -221,37 +221,45 @@ services:
   # ===== MICROSERVICES (Placeholders) =====
   # Những services này sẽ được thêm sau khi code xong
 
-  # core-service:
-  #   image: danh/core-service:latest
-  #   container_name: core-service
-  #   ports:
-  #     - "8081:8081"
-  #   environment:
-  #     SPRING_DATA_MONGODB_URI: mongodb://core_db:27017/healthcare_core
-  #     SPRING_RABBITMQ_HOST: rabbitmq
-  #     SPRING_REDIS_HOST: redis
-  #   depends_on:
-  #     - core_db
-  #     - rabbitmq
-  #     - redis
-  #   networks:
-  #     - healthcare-network
+  core-service:
+    build:
+      context: ../core-service
+      dockerfile: Dockerfile
+    container_name: core-service
+    ports:
+      - "8085:8081"
+    env_file:
+      - ../core-service/.env
+    environment:
+      SPRING_DATA_MONGODB_URI: ${MONGO_CORE_URI:-mongodb://core_db:27017/healthcare_core}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_REDIS_HOST: redis
+    depends_on:
+      - core_db
+      - rabbitmq
+      - redis
+    networks:
+      - healthcare-network
 
-  # iot-service:
-  #   image: danh/iot-service:latest
-  #   container_name: iot-service
-  #   ports:
-  #     - "8082:8082"
-  #   environment:
-  #     SPRING_DATA_MONGODB_URI: mongodb://iot_db:27017/healthcare_iot
-  #     SPRING_RABBITMQ_HOST: rabbitmq
-  #     SPRING_REDIS_HOST: redis
-  #   depends_on:
-  #     - iot_db
-  #     - rabbitmq
-  #     - redis
-  #   networks:
-  #     - healthcare-network
+  iot-service:
+    build:
+      context: ../iot-service
+      dockerfile: Dockerfile
+    container_name: iot-service
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
+    environment:
+      SPRING_DATA_MONGODB_URI: ${MONGO_IOT_URI:-mongodb://iot_db:27017/healthcare_iot}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_REDIS_HOST: redis
+    depends_on:
+      - iot_db
+      - rabbitmq
+      - redis
+    networks:
+      - healthcare-network
 
   # ai-service:
   #   image: danh/ai-service:latest
@@ -270,7 +278,9 @@ services:
   #     - healthcare-network
 
   notification-service:
-    image: danh/notification-service:latest
+    build:
+      context: ../notification-service
+      dockerfile: Dockerfile
     container_name: notification-service
     ports:
       - "8084:8084"

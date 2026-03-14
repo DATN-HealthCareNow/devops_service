@@ -53,18 +53,6 @@ services:
       timeout: 10s
       retries: 3
 
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter
-    container_name: postgres-exporter
-    environment:
-      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-healthcare}?sslmode=disable"
-    ports:
-      - "9187:9187"
-    networks:
-      - healthcare-network
-    depends_on:
-      - postgres
-
 # ===== NETWORKS & VOLUMES =====
 networks:
   healthcare-network:
