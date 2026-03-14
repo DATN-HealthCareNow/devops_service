@@ -74,32 +74,7 @@ else
     echo "⚠️  Warning: $NOTIFICATION_DB container not running"
 fi
 
-# Initialize PostgreSQL
-echo ""
-echo "🐘 Setting up PostgreSQL Databases..."
-POSTGRES_CONTAINER="postgres"
-if docker ps | grep -q $POSTGRES_CONTAINER; then
-    echo "⏳ Waiting for PostgreSQL to be ready..."
-    sleep 5
-    docker exec $POSTGRES_CONTAINER pg_isready -U postgres || true
-    
-    echo "🔧 Creating database and schemas..."
-    # Create main database 'healthcare'
-    docker exec $POSTGRES_CONTAINER psql -U postgres -c "CREATE DATABASE healthcare;" 2>/dev/null || true
-    
-    # Create Schemas in 'healthcare' DB
-    # Note: We connect to 'healthcare' DB now
-    docker exec $POSTGRES_CONTAINER psql -U postgres -d healthcare -c "CREATE SCHEMA IF NOT EXISTS auth;" 2>/dev/null || true
-    docker exec $POSTGRES_CONTAINER psql -U postgres -d healthcare -c "CREATE SCHEMA IF NOT EXISTS catalog;" 2>/dev/null || true
-    
-    # Legacy support: Create old DBs just in case, or leave them if migration path is unclear. 
-    # User requested: "1 DB -> many schema". Let's stick to schemas.
-    # docker exec $POSTGRES_CONTAINER psql -U postgres -c "CREATE DATABASE healthcare_auth;" 2>/dev/null || true
-    
-    echo "✓ PostgreSQL initialized (DB: healthcare, Schemas: auth, catalog)"
-else
-     echo "⚠️  Warning: $POSTGRES_CONTAINER container not running"
-fi
+
 
 echo ""
 echo "=================================================="
@@ -116,7 +91,6 @@ docker exec $CORE_DB mongosh --eval "
     });
 " 2>/dev/null || true
 
-docker exec $POSTGRES_CONTAINER psql -U postgres -c "\l" | grep "healthcare" | awk '{print "  • [Postgres DB] " $1}' 2>/dev/null || true
-docker exec $POSTGRES_CONTAINER psql -U postgres -d healthcare -c "\dn" | grep -E "auth|catalog" | awk '{print "    - [Schema] " $1}' 2>/dev/null || true
+
 
 echo ""

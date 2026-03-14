@@ -119,19 +119,6 @@ MONGO_CORE_PORT=27017
 # Có thể thay đổi nếu port bị chiếm (e.g., 27017 → 27117)
 ```
 
-### PostgreSQL Configuration (NEW)
-
-```env
-POSTGRES_USER=postgres
-# Superuser for PostgreSQL
-
-POSTGRES_DB_AUTH=healthcare_auth
-# Database for Users, Roles, Subscriptions
-
-POSTGRES_DB_CATALOG=healthcare_catalog
-# Database for Medications, Foods
-```
-
 ### Redis Configuration
 
 ```env
@@ -233,12 +220,7 @@ MONGO_IOT_PORT=27018
 MONGO_AI_PORT=27019
 MONGO_NOTIFICATION_PORT=27020
 
-# ===== POSTGRESQL CONFIGURATION =====
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_PORT=5432
-POSTGRES_DB_AUTH=healthcare_auth
-POSTGRES_DB_CATALOG=healthcare_catalog
+
 
 # ===== REDIS CONFIGURATION =====
 REDIS_HOST=redis
@@ -288,17 +270,7 @@ MONGO_IOT_PORT=27018
 MONGO_ANALYSIS_PORT=27019
 MONGO_TRACKING_PORT=27020
 
-# ===== POSTGRESQL CONFIGURATION =====
-POSTGRES_USER=healthcare_admin
-POSTGRES_PASSWORD=SecurePostgresPass2024!
-POSTGRES_PORT=5432
-POSTGRES_DB_AUTH=healthcare_auth
-POSTGRES_DB_CATALOG=healthcare_catalog
 
-# ===== PGADMIN CONFIGURATION =====
-PGADMIN_DEFAULT_EMAIL=admin@healthcare.com
-PGADMIN_DEFAULT_PASSWORD=StrongPgAdminPass2024!
-PGADMIN_PORT=5050
 
 # ===== REDIS CONFIGURATION =====
 REDIS_HOST=redis
@@ -406,7 +378,7 @@ netstat -ano | findstr :80  # Windows
 
 - [ ] Có file .env (từ `cp .env.example .env`)
 - [ ] Chỉnh sửa GRAFANA_ADMIN_PASSWORD thành mật khẩu mạnh
-- [ ] Chỉnh sửa POSTGRES_PASSWORD & PGADMIN_DEFAULT_PASSWORD (Rất quan trọng cho Data Security)
+
 - [ ] Chỉnh sửa RABBITMQ_USER & PASSWORD cho production
 - [ ] .env trong .gitignore
 - [ ] .env KHÔNG commit vào git
@@ -422,10 +394,10 @@ netstat -ano | findstr :80  # Windows
 1. Thay đổi GRAFANA_ADMIN_PASSWORD
 2. Thay đổi RABBITMQ_DEFAULT_USER/PASSWORD
 3. **Cấu hình SSL/TLS cho Nginx**
-4. **Bật SSL/TLS cho PostgreSQL connections**
-5. Bật authentication cho Prometheus & Grafana
-6. Giới hạn database access từ authorized IPs
-7. Sử dụng secrets management (Docker Secrets, Vault, etc.)
+
+4. Bật authentication cho Prometheus & Grafana
+5. Giới hạn database access từ authorized IPs
+6. Sử dụng secrets management (Docker Secrets, Vault, etc.)
 
 ---
 
