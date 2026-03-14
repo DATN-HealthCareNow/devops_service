@@ -6,7 +6,7 @@ Repository này chứa toàn bộ cấu hình DevOps và infrastructure cho hệ
 
 - **Orchestration**: Docker Compose để điều phối 4 microservices + 4 databases + message broker
 - **API Gateway**: Nginx làm cổng vào duy nhất (port 80/443)
-- **Database Management**: Hybrid Architecture (MongoDB for Unstructured Data + PostgreSQL for Structured Data)
+- **Database Management**: Dedicated MongoDB for each microservice
 - **Monitoring**: Prometheus + Grafana để theo dõi performance
 - **Cache & Messaging**: Redis + RabbitMQ
 

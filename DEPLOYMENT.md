@@ -5,7 +5,7 @@
 - [ ] Docker & Docker Compose installed (version 20.10+)
 - [ ] All microservices built and pushed to registry
 - [ ] Environment variables configured in .env
-- [ ] Database backups created
+- [ ] Database backups created (MongoDB)
 - [ ] SSL certificates ready (if using HTTPS)
 - [ ] System requirements met (4GB RAM minimum)
 
@@ -49,6 +49,7 @@ docker-compose ps
 ### Stage 3: Deploy Microservices (ports chuẩn)
 
 Ports chuẩn đã thống nhất:
+
 - core-service: 8081
 - iot-service: 8082
 - ai-service: 8000 (FastAPI)
@@ -111,10 +112,12 @@ Stage 6: Demo/operation → run troubleshooting scenarios if needed
 ```
 
 Pros:
+
 - Simple, fast
 - Good for development
 
 Cons:
+
 - Single failure point
 - Not production-ready
 
@@ -156,6 +159,7 @@ docker-compose logs -f notification-service
 ```
 
 Pros:
+
 - Can catch issues early
 - Rollback easier
 - Better monitoring
@@ -236,10 +240,10 @@ location /api/v1/notif {
 
 ### Troubleshooting Demo Scenario
 
-1) Hệ thống đang chạy ổn định.
-2) Giả lập sự cố: `docker stop core-service`.
-3) Mở Grafana để trình chiếu panel "Service Down" chuyển sang đỏ.
-4) Khôi phục: `docker-compose up -d core-service` và cho thấy trạng thái trở lại "Up".
+1. Hệ thống đang chạy ổn định.
+2. Giả lập sự cố: `docker stop core-service`.
+3. Mở Grafana để trình chiếu panel "Service Down" chuyển sang đỏ.
+4. Khôi phục: `docker-compose up -d core-service` và cho thấy trạng thái trở lại "Up".
 
 ---
 

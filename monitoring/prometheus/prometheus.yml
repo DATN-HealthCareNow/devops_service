@@ -100,12 +100,6 @@ scrape_configs:
   #     - targets: ['redis-exporter:9121']
   #   scrape_interval: 30s
 
-  # ===== POSTGRESQL METRICS =====
-  - job_name: "postgresql"
-    static_configs:
-      - targets: ["postgres-exporter:9187"]
-    scrape_interval: 15s
-
 # ===== RECORDING RULES (tùy chọn) =====
 # rule_files:
 #   - '/etc/prometheus/rules/*.yml'
