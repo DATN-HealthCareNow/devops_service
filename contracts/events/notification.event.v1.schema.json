@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://healthcarenow/contracts/events/notification.event.v1.schema.json",
+  "title": "Notification Event Envelope v1",
+  "description": "Standard event format for notification triggers from IoT/Core services",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "timestamp",
+    "correlation_id",
+    "payload"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F-]{36}$",
+      "description": "UUID for idempotency tracking"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "Notification event code (e.g., WATER_REMINDER, ACTIVITY_COMPLETED, FALL_DETECTED)",
+      "enum": [
+        "WATER_REMINDER",
+        "ACTIVITY_COMPLETED",
+        "FALL_DETECTED",
+        "HIGH_HEART_RATE",
+        "LOW_SLEEP_ALERT",
+        "APPOINTMENT_REMINDER",
+        "MEDICATION_TIME",
+        "CUSTOM_ALERT"
+      ]
+    },
+    "event_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Event schema version for backward compatibility"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when event occurred"
+    },
+    "correlation_id": {
+      "type": "string",
+      "description": "Trace ID for distributed tracing"
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["LOW", "NORMAL", "HIGH", "CRITICAL"],
+      "description": "Notification urgency level"
+    },
+    "payload": {
+      "type": "object",
+      "required": ["user_id"],
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "description": "Target user MongoDB ObjectId"
+        },
+        "device_token": {
+          "type": ["string", "null"],
+          "description": "ExponentPushToken for direct push (optional, resolved from core-service if missing)"
+        },
+        "email": {
+          "type": ["string", "null"],
+          "description": "Email for fallback notification (optional, resolved from core-service if missing)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Notification title (can have template variables like {name})"
+        },
+        "body": {
+          "type": "string",
+          "description": "Notification content (can have template variables)"
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Additional context data for template rendering",
+          "additionalProperties": true
+        },
+        "language": {
+          "type": "string",
+          "enum": ["vi", "en"],
+          "description": "User language preference for template selection"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

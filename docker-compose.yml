@@ -133,6 +133,7 @@ services:
     depends_on:
       - core_db
       - iot_db
+      - bff-service
       - ai_db
       - notification_db
       - rabbitmq
@@ -261,6 +262,23 @@ services:
     networks:
       - healthcare-network
 
+  bff-service:
+    build:
+      context: ../bff-service
+      dockerfile: Dockerfile
+    container_name: bff-service
+    ports:
+      - "8090:8090"
+    environment:
+      PORT: 8090
+      CORE_BASE_URL: http://core-service:8081
+      IOT_BASE_URL: http://iot-service:8082
+    depends_on:
+      - core-service
+      - iot-service
+    networks:
+      - healthcare-network
+
   # ai-service:
   #   image: danh/ai-service:latest
   #   container_name: ai-service
@@ -292,6 +310,8 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      APP_INTERNAL_TOKEN: ${APP_INTERNAL_TOKEN:-hcn-internal-secret-2024}
+      CORE_SERVICE_URL: ${CORE_SERVICE_URL:-http://core-service:8081}
     depends_on:
       - notification_db
       - rabbitmq

@@ -1,0 +1,106 @@
+openapi: 3.0.3
+info:
+  title: HealthCareNow Mobile BFF API
+  version: 1.0.0
+  description: Client-facing BFF contracts for mobile app.
+servers:
+  - url: http://localhost
+paths:
+  /api/v1/bff/mobile/hydration:
+    get:
+      summary: Aggregate hydration data for hydration screen
+      operationId: getHydrationAggregate
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Hydration aggregate
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [progress, logs]
+                properties:
+                  progress:
+                    $ref: '#/components/schemas/WaterProgress'
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WaterLog'
+  /api/v1/bff/mobile/hydration/log:
+    post:
+      summary: Log water intake via BFF
+      operationId: logHydration
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WaterLogRequest'
+      responses:
+        '200':
+          description: Logged successfully
+  /api/v1/bff/mobile/home:
+    get:
+      summary: Aggregate home screen data
+      operationId: getHomeAggregate
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Home aggregate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  water_progress:
+                    $ref: '#/components/schemas/WaterProgress'
+                  upcoming_schedules:
+                    type: array
+                    items:
+                      type: object
+                  total_upcoming_schedules:
+                    type: integer
+components:
+  schemas:
+    WaterLogRequest:
+      type: object
+      required: [amount_ml]
+      properties:
+        amount_ml:
+          type: integer
+        adjustment_reason:
+          type: string
+    WaterLog:
+      type: object
+      properties:
+        amount_ml:
+          type: integer
+        adjustment_reason:
+          type: string
+        time:
+          type: string
+    WaterProgress:
+      type: object
+      properties:
+        total_today_ml:
+          type: integer
+        goal_ml:
+          type: integer
+        progress_percent:
+          type: number
