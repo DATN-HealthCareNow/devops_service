@@ -163,9 +163,7 @@ services:
       - healthcare-network
 
   iot-service:
-    build:
-      context: ../iot-service
-      dockerfile: Dockerfile
+    image: 632469639580.dkr.ecr.ap-southeast-1.amazonaws.com/healthcare-iot-service:latest
     container_name: iot-service
     ports:
       - "8082:8082"
@@ -182,9 +180,7 @@ services:
       - healthcare-network
 
   bff-service:
-    build:
-      context: ../bff-service
-      dockerfile: Dockerfile
+    image: 632469639580.dkr.ecr.ap-southeast-1.amazonaws.com/healthcare-bff-service:latest
     container_name: bff-service
     ports:
       - "8090:8090"
@@ -216,9 +212,7 @@ services:
   #     - healthcare-network
 
   notification-service:
-    build:
-      context: ../notification-service
-      dockerfile: Dockerfile
+    image: 632469639580.dkr.ecr.ap-southeast-1.amazonaws.com/healthcare-notification-service:latest
     container_name: notification-service
     ports:
       - "8084:8084"
