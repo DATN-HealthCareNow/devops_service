@@ -151,7 +151,7 @@ services:
     ports:
       - "8085:8081"
     env_file:
-      - ../core-service/.env
+      - .env
     environment:
       SPRING_DATA_MONGODB_URI: ${MONGO_CORE_URI:-mongodb://core_db:27017/healthcare_core}
       SPRING_RABBITMQ_HOST: rabbitmq
