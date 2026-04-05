@@ -164,6 +164,8 @@ services:
       SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
       APP_INTERNAL_TOKEN: ${APP_INTERNAL_TOKEN:-hcn-internal-secret-2024}
       CORE_SERVICE_URL: ${CORE_SERVICE_URL:-http://core-service:8081}
+      BFF_INTERNAL_URL: ${BFF_INTERNAL_URL:-http://bff-service:8090}
+      WATER_REMINDER_WINDOWS: ${WATER_REMINDER_WINDOWS:-7-8,11-12,17-18}
     depends_on:
       - notification_db
       - rabbitmq
@@ -183,6 +185,7 @@ services:
       PORT: 8090
       CORE_BASE_URL: http://core-service:8081
       IOT_BASE_URL: http://iot-service:8082
+      NOTIFICATION_BASE_URL: http://notification-service:8084
     depends_on:
       - core-service
       - iot-service
