@@ -152,6 +152,7 @@ services:
       SPRING_DATA_MONGODB_URI: ${MONGO_CORE_URI:-mongodb://core_db:27017/healthcare_core}
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_REDIS_HOST: redis
+      CORE_NOTIFICATION_SCHEDULER_ENABLED: ${CORE_NOTIFICATION_SCHEDULER_ENABLED:-false}
     depends_on:
       - rabbitmq
       - redis
