@@ -59,6 +59,7 @@ services:
       - ./nginx/html:/usr/share/nginx/html
     depends_on:
       - bff-service
+      - ai-service
       - rabbitmq
       - redis
       - prometheus
@@ -192,21 +193,19 @@ services:
     networks:
       - healthcare-network
 
-  # ai-service:
-  #   image: danh/ai-service:latest
-  #   container_name: ai-service
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     MONGODB_URI: mongodb://ai_db:27017/healthcare_ai
-  #     RABBITMQ_HOST: rabbitmq
-  #     REDIS_HOST: redis
-  #   depends_on:
-  #     - ai_db
-  #     - rabbitmq
-  #     - redis
-  #   networks:
-  #     - healthcare-network
+  ai-service:
+    build:
+      context: ../ai-service
+      dockerfile: Dockerfile
+    container_name: ai-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    networks:
+      - healthcare-network
 
   notification-service:
     image: 632469639580.dkr.ecr.ap-southeast-1.amazonaws.com/healthcare-notification-service:latest
