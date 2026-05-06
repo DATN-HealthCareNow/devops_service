@@ -200,6 +200,16 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      # Gemini AI
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GEMINI_ARTICLE_MODEL: ${GEMINI_ARTICLE_MODEL:-gemini-2.5-flash}
+      GEMINI_ANALYSIS_MODEL: ${GEMINI_ANALYSIS_MODEL:-gemini-2.5-pro}
+      # MongoDB for RAG Vector Search
+      MONGO_CORE_URI: ${MONGO_AI_URI}
+      MONGO_DB_NAME: ${MONGO_DB_NAME:-healthcare_ai}
+      # CORS
+      CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-*}
     networks:
       - healthcare-network
 
