@@ -185,6 +185,8 @@ services:
       CORE_BASE_URL: http://core-service:8081
       IOT_BASE_URL: http://iot-service:8082
       NOTIFICATION_BASE_URL: http://notification-service:8084
+      AI_BASE_URL: http://ai-service:8000
+      AI_SERVICE_URL: http://ai-service:8000
     depends_on:
       - core-service
       - iot-service
